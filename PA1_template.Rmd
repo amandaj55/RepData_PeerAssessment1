@@ -21,7 +21,7 @@ Calculate total steps and plot histogram
  TotalSteps <- tapply(activity$steps,activity$date,sum)
  
  ## Histogram of total steps per day
- hist(TotalSteps, xlab = "Total Steps per day", main = "Histogram of total steps per day")
+ hist(TotalSteps, breaks = 8, xlab = "Total Steps per day", main = "Histogram of total steps per day")
  
  ## Calculate mean and median of total stpes
  MeanSteps <- mean(TotalSteps, na.rm = TRUE)
@@ -70,7 +70,7 @@ Total number of rows with NA's: `r NumOfNACols`
 
 
 ```{r}
-hist(TotalStepsNoNas, xlab = "Total Steps per day", main = "Histogram of total steps per day NA's replaced")
+hist(TotalStepsNoNas, breaks = 8, xlab = "Total Steps per day", main = "Histogram of total steps per day NA's replaced")
  MeanStepsNoNA <- mean(TotalStepsNoNas, na.rm = TRUE)
  MedianStepsNoNA <- median(TotalStepsNoNas, na.rm = TRUE)
 
