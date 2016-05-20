@@ -1,25 +1,107 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "ReproducibleResearchProject1"
+author: "AJ"
+date: "18 May 2016"
+output: html_document
 ---
 
+Set the working directory and read in activity.csv
 
-## Loading and preprocessing the data
-
-
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
+```{r}
+setwd("~/Documents/Coursera/ReproducibleResearch/Project1")
+ activity <- read.csv("activity.csv")
+  library(ggplot2)
+```
 
 
+Calculate total steps and plot histogram
 
-## Imputing missing values
+```{r total steps mean steps}
+## Calculate total steps per day
+ TotalSteps <- tapply(activity$steps,activity$date,sum)
+ 
+ ## Histogram of total steps per day
+ hist(TotalSteps, xlab = "Total Steps per day", main = "Histogram of total steps per day")
+ 
+ ## Calculate mean and median of total stpes
+ MeanSteps <- mean(TotalSteps, na.rm = TRUE)
+ MedianSteps <- median(TotalSteps, na.rm = TRUE)
+```
+
+Mean of total steps per day: `r MeanSteps`  
+Median of total steps per day: `r MedianSteps`  
+
+Calculate and plot  mean steps per interval across all days  
+Find the max mean steps per interval and the associated interval
+
+```{r steps per interval}
+
+## Calculate and plot  mean steps per interval across all days.
+  MeanStepsInterval <- aggregate(activity$steps,by=list(activity$interval),FUN=mean, na.rm = TRUE)
+  colnames(MeanStepsInterval) <- c("Interval","MeanSteps") 
+  plot(MeanStepsInterval$Interval,MeanStepsInterval$MeanSteps,xlab="Interval",ylab = "Number of steps",type="l", main ="Mean steps per interval across all days" ) 
+  
+## Find the max mean steps per interval and the associated interval
+  MaxMeanStepsInterval <- max(MeanStepsInterval$MeanSteps)
+ 
+  IntervalMaxMeanSteps <- MeanStepsInterval[which(MeanStepsInterval$MeanSteps==MaxMeanStepsInterval),]
+  IntervalMaxMeanStepsInterval <- IntervalMaxMeanSteps$Interval 
+```
+
+Interval with max mean steps across all days : `r IntervalMaxMeanStepsInterval`  
+
+Create new dataset with NA's replaced by mean steps per interval
+
+```{r remove nas and replace with mean of interval }
+## Count the number of rows with NA's
+ IsNACols <- colSums(is.na(activity))
+NumOfNACols <- IsNACols[1]
+
+## Create a new dataset containing original data
+activityNoNAs <- activity
+
+## Replace missing steps values with  mean of interval in new dataset
+activityNoNAs[is.na(activityNoNAs[,1]), 1] <- aggregate(activityNoNAs$steps,by=list(activityNoNAs$interval),FUN=mean, na.rm = TRUE)$x
+
+TotalStepsNoNas <- tapply(activityNoNAs$steps,activityNoNAs$date,sum)
+
+```
+Total number of rows with NA's: `r NumOfNACols`  
 
 
+```{r}
+hist(TotalStepsNoNas, xlab = "Total Steps per day", main = "Histogram of total steps per day NA's replaced")
+ MeanStepsNoNA <- mean(TotalStepsNoNas, na.rm = TRUE)
+ MedianStepsNoNA <- median(TotalStepsNoNas, na.rm = TRUE)
 
-## Are there differences in activity patterns between weekdays and weekends?
+```
+
+Mean of total steps per day (NAs removed): `r MeanStepsNoNA`    
+Median of total steps per day (NAs removed): `r MedianStepsNoNA`  
+
+Indicate if weekday or weekend and calculate mean steps per interval for each subset
+
+```{r indicate if weekday or weekend and subset dataset accordingly; plot weekday and weekend mean steps}
+## create variable containing day of the week corresponding to date
+activityNoNAs$day <- weekdays(as.Date(activityNoNAs$date), abbr = TRUE)  
+
+## Set weekend variable = weekend or weekday depending on day
+activityNoNAs$weekend  <- grepl("S(at|un)", activityNoNAs$day)
+activityNoNAs$weekend  <- gsub("TRUE","weekend",activityNoNAs$weekend )
+activityNoNAs$weekend  <- gsub("FALSE","weekday",activityNoNAs$weekend )
+
+## subset dataset into weekdays and weekend
+weekday <- subset(activityNoNAs,weekend == "weekday")
+weekend <- subset(activityNoNAs,weekend == "weekend")
+
+## calculate mean steps for each interval over all weekdays and weekends
+MeanStepsInterval$WeekdayMean <- aggregate(weekday$steps,by=list(weekday$interval),FUN=mean, na.rm = TRUE)
+MeanStepsInterval$WeekendMean <- aggregate(weekend$steps,by=list(weekend$interval),FUN=mean, na.rm = TRUE)
+
+## plot mean steps for each interval over all weekdays and weekends
+par(mfrow = c(2,1), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
+plot(MeanStepsInterval$WeekdayMean,xlab="Interval",ylab = "Number of steps",type="l", main ="Mean of steps per interval over all weekdays" )
+plot(MeanStepsInterval$WeekendMean,xlab="Interval",ylab = "Number of steps",type="l", main ="Mean of steps per interval over all weekends" ) 
+```
+
+
